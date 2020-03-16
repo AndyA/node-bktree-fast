@@ -83,7 +83,6 @@ bk_tree *bk_new(size_t key_bits) {
   bk_tree *tree = calloc(1, sizeof(bk_tree));
   if (!tree) return NULL;
   tree->key_bits = key_bits;
-  // TODO why is pool[key_bits] accessed?
   tree->pool = calloc(sizeof(bk_node *), key_bits + 1);
   if (!tree->pool) {
     free(tree);
