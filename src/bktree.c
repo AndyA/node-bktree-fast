@@ -10,7 +10,8 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#define NODE_SIZE(tree, size) (sizeof(bk_node) + MAX(sizeof(bk_node *), bk_byte_len(tree) + sizeof(bk_node *) * size))
+#define NODE_SIZE(tree, size) \
+  (sizeof(bk_node) + MAX(sizeof(bk_node *), bk_byte_len(tree) + sizeof(bk_node *) * size))
 #define NODE_KEY(tree, node) ((bk_key *) ((bk_node *) (node))+1)
 #define NODE_NEXT(tree, node) ((bk_node **) NODE_KEY(tree, node))
 #define NODE_SLOT(tree, node) ((bk_node **) (NODE_KEY(tree, node) + bk_u64_len(tree)))
