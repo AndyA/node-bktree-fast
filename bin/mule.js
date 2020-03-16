@@ -125,15 +125,16 @@ const hashes = [
     "ac85b20d92059265b349b3c99a4d9e499149d349d249d269da69da69da69f01b"
 ];
 
-const dist = BKTree.distance(a, b);
-console.log(`Distance: ${dist}`);
+function testTree() {
+  const tree = new BKTree();
+  for (const hash of hashes) {
+    tree.add(hash);
+  }
 
-const tree = new BKTree();
-for (const hash of hashes) {
-  tree.add(hash);
+  tree.walk((key, depth) => console.log(`${key} ${depth}`));
+
+  console.log(`Query for ${a}`);
+  tree.query(a, 30, (key, dist) => console.log(`${key} ${dist}`));
 }
 
-tree.walk((key, depth) => console.log(`${key} ${depth}`));
-
-console.log(`Query for ${a}`);
-tree.query(a, 30, (key, dist) => console.log(`${key} ${dist}`));
+testTree();

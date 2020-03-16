@@ -11,7 +11,8 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 /* We only use the powers of two - but hey */
-static bk_node *pool[BK_KEY_LEN];
+/* FIXME The *2 is a workaround for the fact that max dist might be 513 */
+static bk_node *pool[BK_KEY_LEN * 2];
 
 #define NODE_SIZE(size) (sizeof(bk_node) + sizeof(bk_node *) * size)
 #define NODE_SLOT(node) ((bk_node **) ((node)+1))

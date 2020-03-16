@@ -1,18 +1,19 @@
 "use strict";
 
 const bkt = require("./build/Release/module");
+const _ = require("lodash");
 
 class BKTree {
   constructor() {
     this.tree = bkt.create();
   }
 
-  static distance(a, b) {
+  distance(a, b) {
     return bkt.distance(a, b);
   }
 
-  add(key) {
-    bkt.add(this.tree, key);
+  add(...keys) {
+    for (const key of _.flatten(keys)) bkt.add(this.tree, key);
     return this;
   }
 
