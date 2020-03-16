@@ -90,7 +90,8 @@ void bk_free(bk_tree *tree) {
 
 unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
   unsigned dist = 0;
-  for (unsigned i = 0; i < bk_u64_len(tree); i++)
+  unsigned len = bk_u64_len(tree);
+  for (unsigned i = 0; i < len; i++)
     dist += __builtin_popcountll(a[i] ^ b[i]);
   return dist;
 }
@@ -166,7 +167,8 @@ void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *c
 
 const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf) {
   char *out = buf;
-  for (unsigned i = 0; i < bk_u64_len(tree); i++) {
+  unsigned len = bk_u64_len(tree);
+  for (unsigned i = 0; i < len; i++) {
     sprintf(out, "%016" PRIx64, key[i]);
     out += 16;
   }
@@ -176,7 +178,8 @@ const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf) {
 int bk_hex2key(const bk_tree *tree, const char *hex, bk_key *key) {
   char buf[17], *end;
   buf[16] = '\0';
-  for (unsigned i = 0; i < bk_u64_len(tree); i++) {
+  unsigned len = bk_u64_len(tree);
+  for (unsigned i = 0; i < len; i++) {
     memcpy(buf, hex + 16 * i, 16);
     key[i] = (uint64_t) strtoull(buf, &end, 16);
     if (end != buf + 16) return 1;
