@@ -17,21 +17,27 @@ static bk_node *pool[BK_KEY_LEN * 2];
 #define NODE_SIZE(size) (sizeof(bk_node) + sizeof(bk_node *) * size)
 #define NODE_SLOT(node) ((bk_node **) ((node)+1))
 
-static bk_node *alloc_node(unsigned size) {
+static unsigned log2(unsigned size) {
+  unsigned actual = 1;
+  while (actual < size) actual <<= 1;
+  return actual;
+}
+
+static bk_node *alloc_node(bk_tree *tree, unsigned size) {
   size_t sz = NODE_SIZE(size);
   bk_node *node = calloc(1, sz);
   node->size = size;
   return node;
 }
 
-static void free_node(bk_node *node) {
+static void free_node(bk_tree *tree, bk_node *node) {
   if (node) {
-    free_node(node->next);
+    free_node(tree, node->next);
     free(node);
   }
 }
 
-static bk_node *get_node(unsigned size) {
+static bk_node *get_node(bk_tree *tree, unsigned size) {
   if (pool[size]) {
     bk_node *nd = pool[size];
     pool[size] = nd->next;
@@ -39,32 +45,26 @@ static bk_node *get_node(unsigned size) {
     nd->next = NULL;
     return nd;
   }
-  return alloc_node(size);
+  return alloc_node(tree, size);
 }
 
-static void release_node(bk_node *node) {
+static void release_node(bk_tree *tree, bk_node *node) {
   node->next = pool[node->size];
   pool[node->size] = node;
 }
 
-static unsigned get_size(unsigned size) {
-  unsigned actual = 1;
-  while (actual < size) actual <<= 1;
-  return actual;
-}
-
-static void release_deep(bk_node *node) {
+static void release_deep(bk_tree *tree, bk_node *node) {
   if (!node) return;
   bk_node **slot = NODE_SLOT(node);
   for (unsigned i = 0; i < node->size; i++)
-    release_deep(slot[i]);
+    release_deep(tree, slot[i]);
 
-  release_node(node);
+  release_node(tree, node);
 }
 
-static void free_pool() {
+static void free_pool(bk_tree *tree) {
   for (unsigned i = 0; i < BK_KEY_LEN; i++) {
-    free_node(pool[i]);
+    free_node(tree, pool[i]);
     pool[i] = NULL;
   }
 }
@@ -78,7 +78,7 @@ unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
 
 static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (!node) {
-    node = get_node(1);
+    node = get_node(tree, 1);
     memcpy(&node->key, key, sizeof(bk_key));
     return node;
   }
@@ -87,10 +87,10 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (dist == 0) return node; // exact?
 
   if (dist >= node->size) {
-    bk_node *new = get_node(get_size(dist + 1));
+    bk_node *new = get_node(tree, log2(dist + 1));
     new->key = node->key;
     memcpy(NODE_SLOT(new), NODE_SLOT(node), sizeof(bk_node *) * node->size);
-    release_node(node);
+    release_node(tree, node);
     node = new;
   }
 
@@ -147,9 +147,9 @@ bk_tree *bk_new(size_t key_bits) {
 
 void bk_free(bk_tree *tree) {
   if (tree) {
-    release_deep(tree->root);
+    release_deep(tree, tree->root);
     free(tree);
-    free_pool();
+    free_pool(tree);
   }
 }
 
