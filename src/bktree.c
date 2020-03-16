@@ -80,7 +80,7 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
     return node;
   }
 
-  unsigned dist = bk_distance(tree, (bk_key *) NODE_KEY(tree, node), key);
+  unsigned dist = bk_distance(tree, NODE_KEY(tree, node), key);
   if (dist == 0) return node; // exact?
 
   if (dist >= node->size) {
@@ -103,7 +103,7 @@ void bk_add(bk_tree *tree, const bk_key *key) {
 static void walk(const bk_tree *tree, const bk_node *node, void *ctx, unsigned depth,
                  void (*callback)(const bk_key *key, unsigned depth, void *ctx)) {
   bk_node **slot = NODE_SLOT(tree, node);
-  callback((bk_key *) NODE_KEY(tree, node), depth, ctx);
+  callback(NODE_KEY(tree, node), depth, ctx);
   for (unsigned i = 0; i < node->size; i++)
     if (slot[i]) walk(tree, slot[i], ctx, depth + 1, callback);
 }
@@ -116,10 +116,10 @@ void bk_walk(const bk_tree *tree, void *ctx,
 static void query(const bk_tree *tree, const bk_node *node,
                   const bk_key *key, unsigned max_dist, void *ctx,
                   void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
-  unsigned dist = bk_distance(tree, (bk_key *) NODE_KEY(tree, node), key);
+  unsigned dist = bk_distance(tree, NODE_KEY(tree, node), key);
 
   if (dist <= max_dist)
-    callback((bk_key *) NODE_KEY(tree, node), dist, ctx);
+    callback(NODE_KEY(tree, node), dist, ctx);
 
   int min = MAX(0, (int) dist - (int) max_dist);
   int max = MIN(dist + max_dist, node->size - 1);;

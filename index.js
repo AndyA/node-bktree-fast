@@ -5,6 +5,8 @@ const _ = require("lodash");
 
 class BKTree {
   constructor(keyBits) {
+    if (keyBits % 64)
+      throw new Error(`Key size must be a multiple of 64, got ${keyBits}`);
     this.tree = bkt.create(keyBits);
   }
 

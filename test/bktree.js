@@ -104,36 +104,39 @@ class HashMaker {
   }
 }
 
-const hm = new HashMaker(512);
-
 describe("BKTree", () => {
-  it("should compute distance", () => {
-    const tree = new BKTree(512);
-    for (const a of hm.data)
-      for (const b of hm.data)
-        expect(tree.distance(a, b)).to.equal(hm.distance(a, b));
-  });
+  for (let keyLen = 64; keyLen <= 512; keyLen += 64) {
+    const hm = new HashMaker(keyLen);
+    describe(`Key length: ${keyLen}`, () => {
+      it("should compute distance", () => {
+        const tree = new BKTree(keyLen);
+        for (const a of hm.data)
+          for (const b of hm.data)
+            expect(tree.distance(a, b)).to.equal(hm.distance(a, b));
+      });
 
-  it("should walk the tree", () => {
-    const tree = new BKTree(512).add(hm.data);
-    const got = [];
-    tree.walk((key, depth) => got.push(key));
-    expect(got.sort()).to.deep.equal(hm.data.slice(0).sort());
-  });
-
-  it("should query", () => {
-    const tree = new BKTree(512).add(hm.data);
-    for (let dist = 0; dist <= hm.length; dist++) {
-      for (const baseKey of [hm.random, hm.data[0]]) {
-        const baseKey = hm.random;
+      it("should walk the tree", () => {
+        const tree = new BKTree(keyLen).add(hm.data);
         const got = [];
-        tree.query(baseKey, dist, (key, distance) =>
-          got.push({ key, distance })
-        );
-        expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal(
-          hm.query(baseKey, dist)
-        );
-      }
-    }
-  });
+        tree.walk((key, depth) => got.push(key));
+        expect(got.sort()).to.deep.equal(hm.data.slice(0).sort());
+      });
+
+      it("should query", () => {
+        const tree = new BKTree(keyLen).add(hm.data);
+        for (let dist = 0; dist <= hm.length; dist++) {
+          for (const baseKey of [hm.random, hm.data[0]]) {
+            const baseKey = hm.random;
+            const got = [];
+            tree.query(baseKey, dist, (key, distance) =>
+              got.push({ key, distance })
+            );
+            expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal(
+              hm.query(baseKey, dist)
+            );
+          }
+        }
+      });
+    });
+  }
 });
