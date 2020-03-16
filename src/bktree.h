@@ -10,7 +10,6 @@ extern "C" {
 #include <stdint.h>
 
 #define BK_KEY_LEN 512
-#define BK_HEX_LEN (BK_KEY_LEN/4)
 #define BK_U64_LEN (BK_KEY_LEN/64)
 
 typedef struct bk_key {

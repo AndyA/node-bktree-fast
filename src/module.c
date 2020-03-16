@@ -53,10 +53,10 @@ static int32_t get_int32(napi_env env, napi_value arg) {
 }
 
 static napi_value make_key_string(napi_env env, const bk_tree *tree, const bk_key *key) {
-  char buf[BK_HEX_LEN + 1];
+  char buf[bk_hex_len(tree) + 1];
   napi_value str;
   bk_key2hex(tree, key, buf);
-  napi_status status = napi_create_string_latin1(env, buf, BK_HEX_LEN, &str);
+  napi_status status = napi_create_string_latin1(env, buf, bk_hex_len(tree), &str);
   if (status != napi_ok)
     napi_throw_error(env, NULL, "Failed to create key string");
   return str;
@@ -84,8 +84,7 @@ static napi_value _bk_distance(napi_env env, napi_callback_info info) {
   fetch_args(env, info, argv, 3);
   bk_tree *tree = get_tree(env, argv[0]);
 
-  bk_key a[bk_u64_len(tree)];
-  bk_key b[bk_u64_len(tree)];
+  bk_key a[bk_u64_len(tree)], b[bk_u64_len(tree)];
 
   get_key(env, tree, argv[1], a);
   get_key(env, tree, argv[2], b);
