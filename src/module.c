@@ -99,8 +99,11 @@ static void _bk_free(napi_env env, void *data, void *hint) {
 }
 
 static napi_value _bk_create(napi_env env, napi_callback_info info) {
-  napi_value res;
-  bk_tree *tree = bk_new();
+  napi_value argv[1], res;
+
+  fetch_args(env, info, argv, 1);
+  size_t key_bits = get_int32(env, argv[0]);
+  bk_tree *tree = bk_new(key_bits);
   if (tree) {
     napi_status status = napi_create_external(env, tree, _bk_free, NULL, &res);
     if (status == napi_ok)

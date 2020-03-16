@@ -4,8 +4,8 @@ const bkt = require("./build/Release/module");
 const _ = require("lodash");
 
 class BKTree {
-  constructor() {
-    this.tree = bkt.create();
+  constructor(keyBits) {
+    this.tree = bkt.create(keyBits);
   }
 
   distance(a, b) {

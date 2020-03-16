@@ -139,8 +139,10 @@ void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *c
   query(tree, tree->root, key, max_dist, ctx, callback);
 }
 
-bk_tree *bk_new(void) {
-  return calloc(1, sizeof(bk_tree));
+bk_tree *bk_new(size_t key_bits) {
+  bk_tree *tree = calloc(1, sizeof(bk_tree));
+  tree->key_bits = key_bits;
+  return tree;
 }
 
 void bk_free(bk_tree *tree) {

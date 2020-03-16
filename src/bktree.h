@@ -26,6 +26,7 @@ typedef struct bk_node {
 
 typedef struct bk_tree {
   bk_node *root;
+  size_t key_bits;
 } bk_tree;
 
 int bk_hex2key(const bk_tree *tree, const char *hex, bk_key *key);
@@ -41,7 +42,7 @@ void bk_walk(const bk_tree *tree, void *ctx,
 void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *ctx,
               void (*callback)(const bk_key *key, unsigned distance, void *ctx));
 
-bk_tree *bk_new(void);
+bk_tree *bk_new(size_t key_bits);
 void bk_free(bk_tree *tree);
 
 #ifdef __cplusplus
