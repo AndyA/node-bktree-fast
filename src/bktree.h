@@ -34,7 +34,7 @@ const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf);
 
 unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b);
 
-void bk_add(bk_tree *tree, const bk_key *key);
+int bk_add(bk_tree *tree, const bk_key *key);
 
 void bk_walk(const bk_tree *tree, void *ctx,
              void (*callback)(const bk_key *key, unsigned depth, void *ctx));

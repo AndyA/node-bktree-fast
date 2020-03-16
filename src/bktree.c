@@ -23,6 +23,7 @@ static unsigned power2(unsigned size) {
 static bk_node *alloc_node(bk_tree *tree, unsigned size) {
   size_t sz = NODE_SIZE(tree, size);
   bk_node *node = calloc(1, sz);
+  if (!node) return NULL;
   node->size = size;
   return node;
 }
@@ -66,6 +67,26 @@ static void free_pool(bk_tree *tree) {
   }
 }
 
+bk_tree *bk_new(size_t key_bits) {
+  bk_tree *tree = calloc(1, sizeof(bk_tree));
+  if (!tree) return NULL;
+  tree->pool = calloc(sizeof(bk_node *), key_bits * 2); // FIXME: *2 to avoid overrun in 100% case
+  if (!tree->pool) {
+    free(tree);
+    return NULL;
+  }
+  tree->key_bits = key_bits;
+  return tree;
+}
+
+void bk_free(bk_tree *tree) {
+  if (tree) {
+    release_deep(tree, tree->root);
+    free_pool(tree);
+    free(tree);
+  }
+}
+
 unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
   unsigned dist = 0;
   for (unsigned i = 0; i < bk_u64_len(tree); i++)
@@ -76,6 +97,7 @@ unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
 static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (!node) {
     node = get_node(tree, 1);
+    if (!node) return NULL;
     memcpy(NODE_KEY(tree, node), key, bk_byte_len(tree));
     return node;
   }
@@ -85,6 +107,7 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
 
   if (dist >= node->size) {
     bk_node *new = get_node(tree, power2(dist + 1));
+    if (!new) return NULL;
     memcpy(NODE_KEY(tree, new), NODE_KEY(tree, node), bk_byte_len(tree));
     memcpy(NODE_SLOT(tree, new), NODE_SLOT(tree, node), sizeof(bk_node *) * node->size);
     release_node(tree, node);
@@ -96,8 +119,11 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   return node;
 }
 
-void bk_add(bk_tree *tree, const bk_key *key) {
-  tree->root = add(tree, tree->root, key);
+int bk_add(bk_tree *tree, const bk_key *key) {
+  bk_node *new = add(tree, tree->root, key);
+  if (!new) return 1;
+  tree->root = new;
+  return 0;
 }
 
 static void walk(const bk_tree *tree, const bk_node *node, void *ctx, unsigned depth,
@@ -134,22 +160,6 @@ static void query(const bk_tree *tree, const bk_node *node,
 void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *ctx,
               void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
   query(tree, tree->root, key, max_dist, ctx, callback);
-}
-
-bk_tree *bk_new(size_t key_bits) {
-  bk_tree *tree = calloc(1, sizeof(bk_tree));
-  if (!tree) return NULL;
-  tree->pool = calloc(sizeof(bk_node *), key_bits * 2); // FIXME: *2 to avoid overrun in 100% case
-  tree->key_bits = key_bits;
-  return tree;
-}
-
-void bk_free(bk_tree *tree) {
-  if (tree) {
-    release_deep(tree, tree->root);
-    free_pool(tree);
-    free(tree);
-  }
 }
 
 const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf) {

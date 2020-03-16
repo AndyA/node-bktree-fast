@@ -122,7 +122,8 @@ static napi_value _bk_add(napi_env env, napi_callback_info info) {
   bk_key key[bk_u64_len(tree)];
   get_key(env, tree, argv[1], key);
 
-  bk_add(tree, key);
+  if (bk_add(tree, key))
+    napi_throw_error(env, NULL, "Can't add node");
   return argv[0];
 }
 
