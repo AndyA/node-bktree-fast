@@ -4,7 +4,7 @@
   "description": "",
   "main": "module.js",
   "scripts": {
-    "start": "node-gyp configure build && node module.js",
+    "start": "node-gyp configure build && node bin/mule.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

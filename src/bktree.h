@@ -40,9 +40,9 @@ void bk_release(bk_node *node);
 void bk_walk(const bk_node *node, void *ctx,
              void (*callback)(const bk_key *key, unsigned depth, void *ctx));
 
-void  bk_query(const bk_node *node, const bk_key *key,
-               unsigned max_dist, void *ctx,
-               void (*callback)(const bk_key *key, unsigned distance, void *ctx));
+void bk_query(const bk_node *node, const bk_key *key,
+              unsigned max_dist, void *ctx,
+              void (*callback)(const bk_key *key, unsigned distance, void *ctx));
 
 void bk_dump_key(const bk_key *key);
 void bk_dump(const bk_node *node, unsigned depth);

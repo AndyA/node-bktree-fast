@@ -1,6 +1,6 @@
-const addon = require("./build/Release/module");
-//const value = 8;
-//console.log(`${value} times 2 equals`, addon.my_function(value));
+"use strict";
+
+const BKTree = require("..");
 
 const a =
   "611e251612260cb60fb4afb003b142e1a36bb3db93d313c1d3cbf2c3f2d312ba" +
@@ -125,15 +125,15 @@ const hashes = [
     "ac85b20d92059265b349b3c99a4d9e499149d349d249d269da69da69da69f01b"
 ];
 
-const dist = addon.distance(a, b);
+const dist = BKTree.distance(a, b);
 console.log(`Distance: ${dist}`);
 
-const tree = addon.create();
+const tree = new BKTree();
 for (const hash of hashes) {
-  addon.add(tree, hash);
+  tree.add(hash);
 }
 
-addon.walk(tree, (key, depth) => console.log(`${key} ${depth}`));
+tree.walk((key, depth) => console.log(`${key} ${depth}`));
 
 console.log(`Query for ${a}`);
-addon.query(tree, a, 30, (key, dist) => console.log(`${key} ${dist}`));
+tree.query(a, 30, (key, dist) => console.log(`${key} ${dist}`));
