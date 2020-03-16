@@ -13,7 +13,6 @@ typedef uint64_t bk_key;
 
 typedef struct bk_node {
   unsigned size; /* number of slots in this node */
-  struct bk_node *next; /* in free pool */
   /* |key| follows */
   /* |size| child pointers follow */
 } bk_node;

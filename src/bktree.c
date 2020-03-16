@@ -10,8 +10,9 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#define NODE_SIZE(tree, size) (sizeof(bk_node) + bk_byte_len(tree) + sizeof(bk_node *) * size)
+#define NODE_SIZE(tree, size) (sizeof(bk_node) + MAX(sizeof(bk_node *), bk_byte_len(tree) + sizeof(bk_node *) * size))
 #define NODE_KEY(tree, node) ((bk_key *) ((bk_node *) (node))+1)
+#define NODE_NEXT(tree, node) ((bk_node **) NODE_KEY(tree, node))
 #define NODE_SLOT(tree, node) ((bk_node **) (NODE_KEY(tree, node) + bk_u64_len(tree)))
 
 static unsigned power2(unsigned size) {
@@ -30,7 +31,7 @@ static bk_node *alloc_node(bk_tree *tree, unsigned size) {
 
 static void free_node(bk_tree *tree, bk_node *node) {
   if (node) {
-    free_node(tree, node->next);
+    free_node(tree, *NODE_NEXT(tree, node));
     free(node);
   }
 }
@@ -38,16 +39,16 @@ static void free_node(bk_tree *tree, bk_node *node) {
 static bk_node *get_node(bk_tree *tree, unsigned size) {
   if (tree->pool[size]) {
     bk_node *nd = tree->pool[size];
-    tree->pool[size] = nd->next;
+    tree->pool[size] = *NODE_NEXT(tree, nd);
     memset(NODE_SLOT(tree, nd), 0, sizeof(bk_node *) * size);
-    nd->next = NULL;
+    *NODE_NEXT(tree, nd) = NULL;
     return nd;
   }
   return alloc_node(tree, size);
 }
 
 static void release_node(bk_tree *tree, bk_node *node) {
-  node->next = tree->pool[node->size];
+  *NODE_NEXT(tree, node) = tree->pool[node->size];
   tree->pool[node->size] = node;
 }
 
