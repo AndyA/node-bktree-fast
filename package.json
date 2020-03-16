@@ -12,7 +12,7 @@
     "url": "git+https://github.com/AndyA/node-bktree-fast.git"
   },
   "engines": {
-    "node" : ">=8.4.0"
+    "node": ">=8.4.0"
   },
   "author": "Andy Armstrong <andy@hexten.net>",
   "license": "MIT",
