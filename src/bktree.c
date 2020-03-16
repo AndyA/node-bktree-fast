@@ -70,7 +70,7 @@ static void free_pool(bk_tree *tree) {
 bk_tree *bk_new(size_t key_bits) {
   bk_tree *tree = calloc(1, sizeof(bk_tree));
   if (!tree) return NULL;
-  tree->pool = calloc(sizeof(bk_node *), key_bits * 2); // FIXME: *2 to avoid overrun in 100% case
+  tree->pool = calloc(sizeof(bk_node *), power2(key_bits));
   if (!tree->pool) {
     free(tree);
     return NULL;
@@ -102,10 +102,10 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
     return node;
   }
 
-  unsigned dist = bk_distance(tree, NODE_KEY(tree, node), key);
-  if (dist == 0) return node; // exact?
+  int dist = bk_distance(tree, NODE_KEY(tree, node), key) - 1;
+  if (dist < 0) return node; // exact?
 
-  if (dist >= node->size) {
+  if (dist >= (int) node->size) {
     bk_node *new = get_node(tree, power2(dist + 1));
     if (!new) return NULL;
     memcpy(NODE_KEY(tree, new), NODE_KEY(tree, node), bk_byte_len(tree));
@@ -149,12 +149,12 @@ static void query(const bk_tree *tree, const bk_node *node,
   if (dist <= max_dist)
     callback(NODE_KEY(tree, node), dist, ctx);
 
-  int min = MAX(0, (int) dist - (int) max_dist);
-  int max = MIN(dist + max_dist, node->size - 1);;
+  int min = MAX(0, (int) dist - (int) max_dist - 1);
+  int max = MIN(dist + max_dist + 1, node->size);
 
   bk_node **slot = NODE_SLOT(tree, node);
 
-  for (int i = min; i <= max; i++)
+  for (int i = min; i < max; i++)
     if (slot[i])
       query(tree, slot[i], key, max_dist, ctx, callback);
 }
