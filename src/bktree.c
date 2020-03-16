@@ -10,8 +10,8 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#define NODE_SIZE(size) (sizeof(bk_node) + sizeof(bk_node *) * size)
-#define NODE_SLOT(node) ((bk_node **) ((node)+1))
+#define NODE_SIZE(tree, size) (sizeof(bk_node) + sizeof(bk_node *) * size)
+#define NODE_SLOT(tree, node) ((bk_node **) ((node)+1))
 
 static unsigned power2(unsigned size) {
   unsigned actual = 1;
@@ -20,7 +20,7 @@ static unsigned power2(unsigned size) {
 }
 
 static bk_node *alloc_node(bk_tree *tree, unsigned size) {
-  size_t sz = NODE_SIZE(size);
+  size_t sz = NODE_SIZE(tree, size);
   bk_node *node = calloc(1, sz);
   node->size = size;
   return node;
@@ -37,7 +37,7 @@ static bk_node *get_node(bk_tree *tree, unsigned size) {
   if (tree->pool[size]) {
     bk_node *nd = tree->pool[size];
     tree->pool[size] = nd->next;
-    memset(NODE_SLOT(nd), 0,  sizeof(bk_node *) * size);
+    memset(NODE_SLOT(tree, nd), 0,  sizeof(bk_node *) * size);
     nd->next = NULL;
     return nd;
   }
@@ -51,7 +51,7 @@ static void release_node(bk_tree *tree, bk_node *node) {
 
 static void release_deep(bk_tree *tree, bk_node *node) {
   if (!node) return;
-  bk_node **slot = NODE_SLOT(node);
+  bk_node **slot = NODE_SLOT(tree, node);
   for (unsigned i = 0; i < node->size; i++)
     release_deep(tree, slot[i]);
 
@@ -85,12 +85,12 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (dist >= node->size) {
     bk_node *new = get_node(tree, power2(dist + 1));
     new->key = node->key;
-    memcpy(NODE_SLOT(new), NODE_SLOT(node), sizeof(bk_node *) * node->size);
+    memcpy(NODE_SLOT(tree, new), NODE_SLOT(tree, node), sizeof(bk_node *) * node->size);
     release_node(tree, node);
     node = new;
   }
 
-  bk_node **slot = NODE_SLOT(node);
+  bk_node **slot = NODE_SLOT(tree, node);
   slot[dist] = add(tree, slot[dist], key);
   return node;
 }
@@ -101,7 +101,7 @@ void bk_add(bk_tree *tree, const bk_key *key) {
 
 static void walk(const bk_tree *tree, const bk_node *node, void *ctx, unsigned depth,
                  void (*callback)(const bk_key *key, unsigned depth, void *ctx)) {
-  bk_node **slot = NODE_SLOT(node);
+  bk_node **slot = NODE_SLOT(tree, node);
   callback(&node->key, depth, ctx);
   for (unsigned i = 0; i < node->size; i++)
     if (slot[i]) walk(tree, slot[i], ctx, depth + 1, callback);
@@ -123,7 +123,7 @@ static void query(const bk_tree *tree, const bk_node *node,
   int min = MAX(0, (int) dist - (int) max_dist);
   int max = MIN(dist + max_dist, node->size - 1);;
 
-  bk_node **slot = NODE_SLOT(node);
+  bk_node **slot = NODE_SLOT(tree, node);
 
   for (int i = min; i <= max; i++)
     if (slot[i])
