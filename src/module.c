@@ -106,8 +106,7 @@ static napi_value _bk_create(napi_env env, napi_callback_info info) {
   bk_tree *tree = bk_new(key_bits);
   if (tree) {
     napi_status status = napi_create_external(env, tree, _bk_free, NULL, &res);
-    if (status == napi_ok)
-      return res;
+    if (status == napi_ok) return res;
   }
 
   napi_throw_error(env, NULL, "Can't create tree");
