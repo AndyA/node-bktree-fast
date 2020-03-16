@@ -10,8 +10,10 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
+#define NODE_PAYLOAD_SIZE(tree, size) \
+  (MAX(sizeof(bk_node *), bk_byte_len(tree) + sizeof(bk_node *) * size))
 #define NODE_SIZE(tree, size) \
-  (sizeof(bk_node) + MAX(sizeof(bk_node *), bk_byte_len(tree) + sizeof(bk_node *) * size))
+  (sizeof(bk_node) + NODE_PAYLOAD_SIZE(tree, size))
 #define NODE_KEY(tree, node) ((bk_key *) ((bk_node *) (node))+1)
 #define NODE_NEXT(tree, node) ((bk_node **) NODE_KEY(tree, node))
 #define NODE_SLOT(tree, node) ((bk_node **) (NODE_KEY(tree, node) + bk_u64_len(tree)))
@@ -110,8 +112,7 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (dist >= (int) node->size) {
     bk_node *new = get_node(tree, power2(dist + 1));
     if (!new) return NULL;
-    memcpy(NODE_KEY(tree, new), NODE_KEY(tree, node), bk_byte_len(tree));
-    memcpy(NODE_SLOT(tree, new), NODE_SLOT(tree, node), sizeof(bk_node *) * node->size);
+    memcpy(NODE_KEY(tree, new), NODE_KEY(tree, node), NODE_PAYLOAD_SIZE(tree, node->size));
     release_node(tree, node);
     node = new;
   }
