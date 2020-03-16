@@ -83,7 +83,7 @@ bk_tree *bk_new(size_t key_bits) {
   bk_tree *tree = calloc(1, sizeof(bk_tree));
   if (!tree) return NULL;
   tree->key_bits = key_bits;
-  tree->pool = calloc(sizeof(bk_node *), alloc_size(tree, key_bits));
+  tree->pool = calloc(sizeof(bk_node *), key_bits);
   if (!tree->pool) {
     free(tree);
     return NULL;
