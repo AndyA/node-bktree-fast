@@ -17,9 +17,9 @@ typedef struct bk_key {
 } bk_key;
 
 typedef struct bk_node {
-  bk_key key;
   unsigned size; /* number of slots in this node */
   struct bk_node *next; /* in free pool */
+  bk_key key;
   /* |size| child pointers follow */
 } bk_node;
 

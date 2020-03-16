@@ -17,7 +17,7 @@ static bk_node *pool[BK_KEY_LEN * 2];
 #define NODE_SIZE(size) (sizeof(bk_node) + sizeof(bk_node *) * size)
 #define NODE_SLOT(node) ((bk_node **) ((node)+1))
 
-static unsigned log2(unsigned size) {
+static unsigned power2(unsigned size) {
   unsigned actual = 1;
   while (actual < size) actual <<= 1;
   return actual;
@@ -87,7 +87,7 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (dist == 0) return node; // exact?
 
   if (dist >= node->size) {
-    bk_node *new = get_node(tree, log2(dist + 1));
+    bk_node *new = get_node(tree, power2(dist + 1));
     new->key = node->key;
     memcpy(NODE_SLOT(new), NODE_SLOT(node), sizeof(bk_node *) * node->size);
     release_node(tree, node);
