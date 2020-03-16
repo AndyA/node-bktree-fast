@@ -9,7 +9,7 @@ class BKTree {
   }
 
   distance(a, b) {
-    return bkt.distance(a, b);
+    return bkt.distance(this.tree, a, b);
   }
 
   add(...keys) {

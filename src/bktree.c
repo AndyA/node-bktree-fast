@@ -53,21 +53,37 @@ static unsigned get_size(unsigned size) {
   return actual;
 }
 
-unsigned bk_distance(const bk_key *a, const bk_key *b) {
+static void release_deep(bk_node *node) {
+  if (!node) return;
+  bk_node **slot = NODE_SLOT(node);
+  for (unsigned i = 0; i < node->size; i++)
+    release_deep(slot[i]);
+
+  release_node(node);
+}
+
+static void free_pool() {
+  for (unsigned i = 0; i < BK_KEY_LEN; i++) {
+    free_node(pool[i]);
+    pool[i] = NULL;
+  }
+}
+
+unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
   unsigned dist = 0;
   for (unsigned i = 0; i < BK_U64_LEN; i++)
     dist += __builtin_popcountll(a->key[i] ^ b->key[i]);
   return dist;
 }
 
-bk_node *bk_add(bk_node *node, const bk_key *key) {
+static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (!node) {
     node = get_node(1);
     memcpy(&node->key, key, sizeof(bk_key));
     return node;
   }
 
-  unsigned dist = bk_distance(&node->key, key);
+  unsigned dist = bk_distance(tree, &node->key, key);
   if (dist == 0) return node; // exact?
 
   if (dist >= node->size) {
@@ -79,26 +95,31 @@ bk_node *bk_add(bk_node *node, const bk_key *key) {
   }
 
   bk_node **slot = NODE_SLOT(node);
-  slot[dist] = bk_add(slot[dist], key);
+  slot[dist] = add(tree, slot[dist], key);
   return node;
 }
 
-static void walk(const bk_node *node, void *ctx, unsigned depth,
+void bk_add(bk_tree *tree, const bk_key *key) {
+  tree->root = add(tree, tree->root, key);
+}
+
+static void walk(const bk_tree *tree, const bk_node *node, void *ctx, unsigned depth,
                  void (*callback)(const bk_key *key, unsigned depth, void *ctx)) {
   bk_node **slot = NODE_SLOT(node);
   callback(&node->key, depth, ctx);
   for (unsigned i = 0; i < node->size; i++)
-    if (slot[i]) walk(slot[i], ctx, depth + 1, callback);
+    if (slot[i]) walk(tree, slot[i], ctx, depth + 1, callback);
 }
 
-void bk_walk(const bk_node *node, void *ctx,
+void bk_walk(const bk_tree *tree, void *ctx,
              void (*callback)(const bk_key *key, unsigned depth, void *ctx)) {
-  walk(node, ctx, 0, callback);
+  walk(tree, tree->root, ctx, 0, callback);
 }
 
-void bk_query(const bk_node *node, const bk_key *key, unsigned max_dist, void *ctx,
-              void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
-  unsigned dist = bk_distance(&node->key, key);
+static void query(const bk_tree *tree, const bk_node *node,
+                  const bk_key *key, unsigned max_dist, void *ctx,
+                  void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
+  unsigned dist = bk_distance(tree, &node->key, key);
 
   if (dist <= max_dist)
     callback(&node->key, dist, ctx);
@@ -110,7 +131,12 @@ void bk_query(const bk_node *node, const bk_key *key, unsigned max_dist, void *c
 
   for (int i = min; i <= max; i++)
     if (slot[i])
-      bk_query(slot[i], key, max_dist, ctx, callback);
+      query(tree, slot[i], key, max_dist, ctx, callback);
+}
+
+void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *ctx,
+              void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
+  query(tree, tree->root, key, max_dist, ctx, callback);
 }
 
 bk_tree *bk_new(void) {
@@ -119,29 +145,13 @@ bk_tree *bk_new(void) {
 
 void bk_free(bk_tree *tree) {
   if (tree) {
-    bk_release(tree->root);
+    release_deep(tree->root);
     free(tree);
-    bk_free_pool();
+    free_pool();
   }
 }
 
-void bk_release(bk_node *node) {
-  if (!node) return;
-  bk_node **slot = NODE_SLOT(node);
-  for (unsigned i = 0; i < node->size; i++)
-    bk_release(slot[i]);
-
-  release_node(node);
-}
-
-void bk_free_pool() {
-  for (unsigned i = 0; i < BK_KEY_LEN; i++) {
-    free_node(pool[i]);
-    pool[i] = NULL;
-  }
-}
-
-const char *bk_key2hex(const bk_key *key, char *buf) {
+const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf) {
   char *out = buf;
   for (unsigned i = 0; i < BK_U64_LEN; i++) {
     sprintf(out, "%016" PRIx64, key->key[i]);
@@ -150,7 +160,7 @@ const char *bk_key2hex(const bk_key *key, char *buf) {
   return buf;
 }
 
-int bk_hex2key(const char *hex, bk_key *key) {
+int bk_hex2key(const bk_tree *tree, const char *hex, bk_key *key) {
   char buf[17], *end;
   buf[16] = '\0';
   for (unsigned i = 0; i < BK_U64_LEN; i++) {
@@ -160,22 +170,6 @@ int bk_hex2key(const char *hex, bk_key *key) {
   }
 
   return 0;
-}
-
-void bk_dump_key(const bk_key *key) {
-  char buf[BK_HEX_LEN + 1];
-  printf("%s", bk_key2hex(key, buf));
-}
-
-void bk_dump(const bk_node *node, unsigned depth) {
-  if (!node) return;
-  for (unsigned i = 0; i < depth; i++) printf("  ");
-  bk_dump_key(&node->key);
-  printf(" %d\n", node->size);
-
-  bk_node **slot = NODE_SLOT(node);
-  for (unsigned d = 0; d < node->size; d++)
-    bk_dump(slot[d], depth + 1);
 }
 
 /* vim:ts=2:sw=2:sts=2:et:ft=c

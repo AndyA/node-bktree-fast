@@ -28,24 +28,18 @@ typedef struct bk_tree {
   bk_node *root;
 } bk_tree;
 
-int bk_hex2key(const char *hex, bk_key *key);
-const char *bk_key2hex(const bk_key *key, char *buf);
+int bk_hex2key(const bk_tree *tree, const char *hex, bk_key *key);
+const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf);
 
-unsigned bk_distance(const bk_key *a, const bk_key *b);
+unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b);
 
-bk_node *bk_add(bk_node *node, const bk_key *key);
-void bk_free_pool();
-void bk_release(bk_node *node);
+void bk_add(bk_tree *tree, const bk_key *key);
 
-void bk_walk(const bk_node *node, void *ctx,
+void bk_walk(const bk_tree *tree, void *ctx,
              void (*callback)(const bk_key *key, unsigned depth, void *ctx));
 
-void bk_query(const bk_node *node, const bk_key *key,
-              unsigned max_dist, void *ctx,
+void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *ctx,
               void (*callback)(const bk_key *key, unsigned distance, void *ctx));
-
-void bk_dump_key(const bk_key *key);
-void bk_dump(const bk_node *node, unsigned depth);
 
 bk_tree *bk_new(void);
 void bk_free(bk_tree *tree);

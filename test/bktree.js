@@ -6,11 +6,6 @@ const _ = require("lodash");
 
 const BKTree = require("..");
 
-// stride: 2 -> 32, 16 -> 8
-// pad: 2 -> 32,  16 -> 8
-//  2 -> 32
-// 16 ->  8
-
 function rebase(str, inBase, outBase) {
   const mapBase = b => (b === 2 ? 32 : b === 16 ? 8 : null);
   const stride = mapBase(inBase);
@@ -40,10 +35,6 @@ class HashMaker {
         `Hash length mismatch ${this.length} != ${binHash.length}`
       );
     return rebase(binHash, 2, 16);
-  }
-
-  hexToBin(hexHash) {
-    return rebase(hexHash, 16, 2);
   }
 
   makeBits() {
