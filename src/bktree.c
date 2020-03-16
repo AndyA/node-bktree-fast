@@ -115,7 +115,9 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   }
 
   bk_node **slot = NODE_SLOT(tree, node);
-  slot[dist] = add(tree, slot[dist], key);
+  bk_node *new = add(tree, slot[dist], key);
+  if (!new) return NULL;
+  slot[dist] = new;
   return node;
 }
 
