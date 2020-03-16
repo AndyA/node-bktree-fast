@@ -10,8 +10,9 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#define NODE_SIZE(tree, size) (sizeof(bk_node) + sizeof(bk_node *) * size)
-#define NODE_SLOT(tree, node) ((bk_node **) ((node)+1))
+#define NODE_SIZE(tree, size) (sizeof(bk_node) + bk_byte_len(tree) + sizeof(bk_node *) * size)
+#define NODE_KEY(tree, node) ((bk_key *) ((bk_node *) (node))+1)
+#define NODE_SLOT(tree, node) ((bk_node **) (NODE_KEY(tree, node) + bk_u64_len(tree)))
 
 static unsigned power2(unsigned size) {
   unsigned actual = 1;
@@ -68,23 +69,23 @@ static void free_pool(bk_tree *tree) {
 unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
   unsigned dist = 0;
   for (unsigned i = 0; i < bk_u64_len(tree); i++)
-    dist += __builtin_popcountll(a->key[i] ^ b->key[i]);
+    dist += __builtin_popcountll(a[i] ^ b[i]);
   return dist;
 }
 
 static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (!node) {
     node = get_node(tree, 1);
-    memcpy(&node->key, key, sizeof(bk_key));
+    memcpy(NODE_KEY(tree, node), key, bk_byte_len(tree));
     return node;
   }
 
-  unsigned dist = bk_distance(tree, &node->key, key);
+  unsigned dist = bk_distance(tree, (bk_key *) NODE_KEY(tree, node), key);
   if (dist == 0) return node; // exact?
 
   if (dist >= node->size) {
     bk_node *new = get_node(tree, power2(dist + 1));
-    new->key = node->key;
+    memcpy(NODE_KEY(tree, new), NODE_KEY(tree, node), bk_byte_len(tree));
     memcpy(NODE_SLOT(tree, new), NODE_SLOT(tree, node), sizeof(bk_node *) * node->size);
     release_node(tree, node);
     node = new;
@@ -102,7 +103,7 @@ void bk_add(bk_tree *tree, const bk_key *key) {
 static void walk(const bk_tree *tree, const bk_node *node, void *ctx, unsigned depth,
                  void (*callback)(const bk_key *key, unsigned depth, void *ctx)) {
   bk_node **slot = NODE_SLOT(tree, node);
-  callback(&node->key, depth, ctx);
+  callback((bk_key *) NODE_KEY(tree, node), depth, ctx);
   for (unsigned i = 0; i < node->size; i++)
     if (slot[i]) walk(tree, slot[i], ctx, depth + 1, callback);
 }
@@ -115,10 +116,10 @@ void bk_walk(const bk_tree *tree, void *ctx,
 static void query(const bk_tree *tree, const bk_node *node,
                   const bk_key *key, unsigned max_dist, void *ctx,
                   void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
-  unsigned dist = bk_distance(tree, &node->key, key);
+  unsigned dist = bk_distance(tree, (bk_key *) NODE_KEY(tree, node), key);
 
   if (dist <= max_dist)
-    callback(&node->key, dist, ctx);
+    callback((bk_key *) NODE_KEY(tree, node), dist, ctx);
 
   int min = MAX(0, (int) dist - (int) max_dist);
   int max = MIN(dist + max_dist, node->size - 1);;
@@ -154,7 +155,7 @@ void bk_free(bk_tree *tree) {
 const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf) {
   char *out = buf;
   for (unsigned i = 0; i < bk_u64_len(tree); i++) {
-    sprintf(out, "%016" PRIx64, key->key[i]);
+    sprintf(out, "%016" PRIx64, key[i]);
     out += 16;
   }
   return buf;
@@ -165,7 +166,7 @@ int bk_hex2key(const bk_tree *tree, const char *hex, bk_key *key) {
   buf[16] = '\0';
   for (unsigned i = 0; i < bk_u64_len(tree); i++) {
     memcpy(buf, hex + 16 * i, 16);
-    key->key[i] = (uint64_t) strtoull(buf, &end, 16);
+    key[i] = (uint64_t) strtoull(buf, &end, 16);
     if (end != buf + 16) return 1;
   }
 

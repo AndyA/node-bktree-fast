@@ -9,17 +9,12 @@ extern "C" {
 
 #include <stdint.h>
 
-#define BK_KEY_LEN 512
-#define BK_U64_LEN (BK_KEY_LEN/64)
-
-typedef struct bk_key {
-  uint64_t key[BK_U64_LEN];
-} bk_key;
+typedef uint64_t bk_key;
 
 typedef struct bk_node {
   unsigned size; /* number of slots in this node */
   struct bk_node *next; /* in free pool */
-  bk_key key;
+  /* |key| follows */
   /* |size| child pointers follow */
 } bk_node;
 
