@@ -10,10 +10,6 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-/* We only use the powers of two - but hey */
-/* FIXME The *2 is a workaround for the fact that max dist might be 513 */
-static bk_node *pool[BK_KEY_LEN * 2];
-
 #define NODE_SIZE(size) (sizeof(bk_node) + sizeof(bk_node *) * size)
 #define NODE_SLOT(node) ((bk_node **) ((node)+1))
 
@@ -38,9 +34,9 @@ static void free_node(bk_tree *tree, bk_node *node) {
 }
 
 static bk_node *get_node(bk_tree *tree, unsigned size) {
-  if (pool[size]) {
-    bk_node *nd = pool[size];
-    pool[size] = nd->next;
+  if (tree->pool[size]) {
+    bk_node *nd = tree->pool[size];
+    tree->pool[size] = nd->next;
     memset(NODE_SLOT(nd), 0,  sizeof(bk_node *) * size);
     nd->next = NULL;
     return nd;
@@ -49,8 +45,8 @@ static bk_node *get_node(bk_tree *tree, unsigned size) {
 }
 
 static void release_node(bk_tree *tree, bk_node *node) {
-  node->next = pool[node->size];
-  pool[node->size] = node;
+  node->next = tree->pool[node->size];
+  tree->pool[node->size] = node;
 }
 
 static void release_deep(bk_tree *tree, bk_node *node) {
@@ -63,9 +59,9 @@ static void release_deep(bk_tree *tree, bk_node *node) {
 }
 
 static void free_pool(bk_tree *tree) {
-  for (unsigned i = 0; i < BK_KEY_LEN; i++) {
-    free_node(tree, pool[i]);
-    pool[i] = NULL;
+  for (unsigned i = 0; i < bk_key_len(tree); i++) {
+    free_node(tree, tree->pool[i]);
+    tree->pool[i] = NULL;
   }
 }
 
@@ -141,6 +137,8 @@ void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *c
 
 bk_tree *bk_new(size_t key_bits) {
   bk_tree *tree = calloc(1, sizeof(bk_tree));
+  if (!tree) return NULL;
+  tree->pool = calloc(sizeof(bk_node *), key_bits * 2); // FIXME: *2 to avoid overrun in 100% case
   tree->key_bits = key_bits;
   return tree;
 }
@@ -148,8 +146,8 @@ bk_tree *bk_new(size_t key_bits) {
 void bk_free(bk_tree *tree) {
   if (tree) {
     release_deep(tree, tree->root);
-    free(tree);
     free_pool(tree);
+    free(tree);
   }
 }
 

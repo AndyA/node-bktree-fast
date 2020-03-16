@@ -24,8 +24,9 @@ typedef struct bk_node {
 } bk_node;
 
 typedef struct bk_tree {
-  bk_node *root;
   size_t key_bits;
+  bk_node *root;
+  bk_node **pool;
 } bk_tree;
 
 #define bk_key_len(tree) ((tree)->key_bits)
