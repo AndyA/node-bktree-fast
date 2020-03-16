@@ -71,6 +71,14 @@ static void free_pool(bk_tree *tree) {
   }
 }
 
+void bk_free(bk_tree *tree) {
+  if (tree) {
+    release_deep(tree, tree->root);
+    free_pool(tree);
+    free(tree);
+  }
+}
+
 bk_tree *bk_new(size_t key_bits) {
   bk_tree *tree = calloc(1, sizeof(bk_tree));
   if (!tree) return NULL;
@@ -81,14 +89,6 @@ bk_tree *bk_new(size_t key_bits) {
     return NULL;
   }
   return tree;
-}
-
-void bk_free(bk_tree *tree) {
-  if (tree) {
-    release_deep(tree, tree->root);
-    free_pool(tree);
-    free(tree);
-  }
 }
 
 unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
