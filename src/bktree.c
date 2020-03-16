@@ -39,7 +39,7 @@ static bk_node *get_node(bk_tree *tree, unsigned size) {
   if (tree->pool[size]) {
     bk_node *nd = tree->pool[size];
     tree->pool[size] = nd->next;
-    memset(NODE_SLOT(tree, nd), 0,  sizeof(bk_node *) * size);
+    memset(NODE_SLOT(tree, nd), 0, sizeof(bk_node *) * size);
     nd->next = NULL;
     return nd;
   }
