@@ -9,8 +9,8 @@ typedef struct cb_context {
   const bk_tree *tree;
 } cb_context;
 
-static void install_function(napi_env env, napi_value exports, const char *name,
-                             napi_value(*func)(napi_env env, napi_callback_info info)) {
+static void export_function(napi_env env, napi_value exports, const char *name,
+                            napi_value(*func)(napi_env env, napi_callback_info info)) {
   napi_status status;
   napi_value fn;
 
@@ -168,11 +168,11 @@ static napi_value _bk_query(napi_env env, napi_callback_info info) {
 }
 
 napi_value Init(napi_env env, napi_value exports) {
-  install_function(env, exports, "distance", _bk_distance);
-  install_function(env, exports, "create", _bk_create);
-  install_function(env, exports, "add", _bk_add);
-  install_function(env, exports, "walk", _bk_walk);
-  install_function(env, exports, "query", _bk_query);
+  export_function(env, exports, "distance", _bk_distance);
+  export_function(env, exports, "create", _bk_create);
+  export_function(env, exports, "add", _bk_add);
+  export_function(env, exports, "walk", _bk_walk);
+  export_function(env, exports, "query", _bk_query);
   return exports;
 }
 
