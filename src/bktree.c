@@ -18,10 +18,10 @@
 #define NODE_NEXT(tree, node) ((bk_node **) NODE_KEY(tree, node))
 #define NODE_SLOT(tree, node) ((bk_node **) (NODE_KEY(tree, node) + bk_u64_len(tree)))
 
-static unsigned power2(unsigned size) {
+static unsigned power2(const bk_tree *tree, unsigned size) {
   unsigned actual = 1;
   while (actual < size) actual <<= 1;
-  return actual;
+  return MIN(actual, tree->key_bits);
 }
 
 static bk_node *alloc_node(bk_tree *tree, unsigned size) {
@@ -74,12 +74,12 @@ static void free_pool(bk_tree *tree) {
 bk_tree *bk_new(size_t key_bits) {
   bk_tree *tree = calloc(1, sizeof(bk_tree));
   if (!tree) return NULL;
-  tree->pool = calloc(sizeof(bk_node *), power2(key_bits));
+  tree->key_bits = key_bits;
+  tree->pool = calloc(sizeof(bk_node *), power2(tree, key_bits));
   if (!tree->pool) {
     free(tree);
     return NULL;
   }
-  tree->key_bits = key_bits;
   return tree;
 }
 
@@ -110,7 +110,7 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (dist < 0) return node; // exact?
 
   if (dist >= (int) node->size) {
-    bk_node *new = get_node(tree, power2(dist + 1));
+    bk_node *new = get_node(tree, power2(tree, dist + 1));
     if (!new) return NULL;
     memcpy(NODE_KEY(tree, new), NODE_KEY(tree, node), NODE_PAYLOAD_SIZE(tree, node->size));
     release_node(tree, node);
