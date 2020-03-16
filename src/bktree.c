@@ -96,7 +96,7 @@ unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
 
 static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   if (!node) {
-    node = get_node(tree, 1);
+    node = get_node(tree, 0);
     if (!node) return NULL;
     memcpy(NODE_KEY(tree, node), key, bk_byte_len(tree));
     return node;
