@@ -29,6 +29,10 @@ typedef struct bk_tree {
   size_t key_bits;
 } bk_tree;
 
+#define bk_key_len(tree) ((tree)->key_bits)
+#define bk_hex_len(tree) (bk_key_len(tree) / 4)
+#define bk_u64_len(tree) (bk_key_len(tree) / 64)
+
 int bk_hex2key(const bk_tree *tree, const char *hex, bk_key *key);
 const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf);
 
