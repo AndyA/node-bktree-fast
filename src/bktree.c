@@ -32,13 +32,6 @@ static bk_node *alloc_node(bk_tree *tree, unsigned size) {
   return node;
 }
 
-static void free_node(bk_tree *tree, bk_node *node) {
-  if (node) {
-    free_node(tree, *NODE_NEXT(tree, node));
-    free(node);
-  }
-}
-
 static bk_node *get_node(bk_tree *tree, unsigned size) {
   if (tree->pool[size]) {
     bk_node *nd = tree->pool[size];
@@ -48,6 +41,20 @@ static bk_node *get_node(bk_tree *tree, unsigned size) {
     return nd;
   }
   return alloc_node(tree, size);
+}
+
+static void free_node(bk_tree *tree, bk_node *node) {
+  if (node) {
+    free_node(tree, *NODE_NEXT(tree, node));
+    free(node);
+  }
+}
+
+static void free_pool(bk_tree *tree) {
+  for (unsigned i = 0; i <= bk_key_len(tree); i++) {
+    free_node(tree, tree->pool[i]);
+    tree->pool[i] = NULL;
+  }
 }
 
 static void release_node(bk_tree *tree, bk_node *node) {
@@ -62,13 +69,6 @@ static void release_deep(bk_tree *tree, bk_node *node) {
     release_deep(tree, slot[i]);
 
   release_node(tree, node);
-}
-
-static void free_pool(bk_tree *tree) {
-  for (unsigned i = 0; i <= bk_key_len(tree); i++) {
-    free_node(tree, tree->pool[i]);
-    tree->pool[i] = NULL;
-  }
 }
 
 void bk_free(bk_tree *tree) {
