@@ -26,10 +26,12 @@ class BKTree {
 
   walk(cb) {
     bkt.walk(this.tree, cb);
+    return this;
   }
 
   query(key, maxDist, cb) {
     bkt.query(this.tree, this.padKey(key), maxDist, cb);
+    return this;
   }
 }
 
