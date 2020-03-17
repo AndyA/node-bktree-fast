@@ -56,13 +56,13 @@ static bk_tree *get_tree(napi_env env, napi_value arg) {
   return (bk_tree *) tree;
 }
 
-static int32_t get_int32(napi_env env, napi_value arg) {
-  int32_t res = 0;
-
-  if (napi_ok != napi_get_value_int32(env, arg, &res))
+static int get_int32(napi_env env, napi_value arg, int32_t *out) {
+  if (napi_ok != napi_get_value_int32(env, arg, out)) {
     napi_throw_error(env, NULL, "Can't get int from arg");
+    return 1;
+  }
 
-  return res;
+  return 0;
 }
 
 static napi_value make_key_string(napi_env env, const bk_tree *tree, const bk_key *key) {
@@ -87,15 +87,18 @@ static napi_value make_unsigned(napi_env env, unsigned v) {
 
 static napi_value _bk_distance(napi_env env, napi_callback_info info) {
   napi_value argv[3];
-  fetch_args(env, info, argv, 3);
+
+  if (fetch_args(env, info, argv, 3)) return NULL;
+
   bk_tree *tree = get_tree(env, argv[0]);
+  if (!tree) return NULL;
 
   bk_key a[bk_u64_len(tree)], b[bk_u64_len(tree)];
 
-  get_key(env, tree, argv[1], a);
-  get_key(env, tree, argv[2], b);
+  if (get_key(env, tree, argv[1], a) && get_key(env, tree, argv[2], b))
+    return make_unsigned(env, bk_distance(tree, a, b));
 
-  return make_unsigned(env, bk_distance(tree, a, b));
+  return NULL;
 }
 
 static void _bk_free(napi_env env, void *data, void *hint) {
@@ -106,9 +109,11 @@ static void _bk_free(napi_env env, void *data, void *hint) {
 
 static napi_value _bk_create(napi_env env, napi_callback_info info) {
   napi_value argv[1], res;
+  int32_t key_bits;
 
-  fetch_args(env, info, argv, 1);
-  size_t key_bits = get_int32(env, argv[0]);
+  if (fetch_args(env, info, argv, 1)) return NULL;
+  if (get_int32(env, argv[0], &key_bits)) return NULL;
+
   bk_tree *tree = bk_new(key_bits);
   if (tree) {
     napi_status status = napi_create_external(env, tree, _bk_free, NULL, &res);
@@ -121,14 +126,18 @@ static napi_value _bk_create(napi_env env, napi_callback_info info) {
 
 static napi_value _bk_add(napi_env env, napi_callback_info info) {
   napi_value argv[2];
-  fetch_args(env, info, argv, 2);
+  if (fetch_args(env, info, argv, 2)) return NULL;
 
   bk_tree *tree = get_tree(env, argv[0]);
+  if (!tree) return NULL;
+
   bk_key key[bk_u64_len(tree)];
-  get_key(env, tree, argv[1], key);
+
+  if (!get_key(env, tree, argv[1], key)) return NULL;
 
   if (bk_add(tree, key))
     napi_throw_error(env, NULL, "Can't add node");
+
   return NULL;
 }
 
@@ -147,27 +156,38 @@ static napi_value _bk_walk(napi_env env, napi_callback_info info) {
   napi_value argv[2];
   cb_context cb;
 
-  fetch_args(env, info, argv, 2);
+  if (fetch_args(env, info, argv, 2)) return NULL;;
+
   bk_tree *tree = get_tree(env, argv[0]);
+  if (!tree) return NULL;
+
   cb.env = env;
   cb.callback = argv[1];
   cb.tree = tree;
+
   bk_walk(tree, &cb, _bk_walk_callback);
   return NULL;
 }
 
 static napi_value _bk_query(napi_env env, napi_callback_info info) {
   napi_value argv[4];
+  int32_t max_dist;
   cb_context cb;
 
-  fetch_args(env, info, argv, 4);
+  if (fetch_args(env, info, argv, 4)) return NULL;
+
   bk_tree *tree = get_tree(env, argv[0]);
+  if (!tree) return NULL;
+
   bk_key key[bk_u64_len(tree)];
-  get_key(env, tree, argv[1], key);
-  unsigned max_dist = (unsigned) get_int32(env, argv[2]);
+
+  if (!get_key(env, tree, argv[1], key)) return NULL;
+  if (get_int32(env, argv[2], &max_dist)) return NULL;
+
   cb.env = env;
   cb.callback = argv[3];
   cb.tree = tree;
+
   bk_query(tree, key, max_dist, &cb, _bk_walk_callback);
   return NULL;
 }
