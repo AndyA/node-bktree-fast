@@ -97,6 +97,14 @@ if (tree.has(hash)) console.log(`Got ${hash}`);
 
 Check whether the specified hash is in the tree.
 
+### size
+
+```js
+console.log(`${tree.size} unique hashes`);
+```
+
+Return the number of unique hashes in the tree.
+
 ### walk(callback)
 
 ```js

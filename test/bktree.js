@@ -135,6 +135,15 @@ describe("BKTree", () => {
         for (const key of hm.data) expect(tree.has(hm.randomKey())).to.be.false;
       });
 
+      it("should know the tree size", () => {
+        const tree = new BKTree(keyLen);
+        expect(tree.size).to.equal(0);
+        tree.add(hm.data);
+        expect(tree.size).to.equal(hm.data.length);
+        tree.add(hm.data);
+        expect(tree.size).to.equal(hm.data.length);
+      });
+
       it("should walk the tree", () => {
         const tree = new BKTree(keyLen).add(hm.data);
         const got = [];

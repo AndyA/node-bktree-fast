@@ -110,7 +110,10 @@ static bk_node *add(bk_tree *tree, bk_node *node, const bk_key *key) {
   }
 
   int dist = bk_distance(tree, NODE_KEY(tree, node), key) - 1;
-  if (dist < 0) return node; // exact?
+  if (dist < 0) {
+    tree->size--;
+    return node; // exact?
+  }
 
   if (dist >= (int) node->size) {
     bk_node *new = get_node(tree, alloc_size(tree, dist + 1));
@@ -131,6 +134,7 @@ int bk_add(bk_tree *tree, const bk_key *key) {
   bk_node *new = add(tree, tree->root, key);
   if (!new) return 1;
   tree->root = new;
+  tree->size++;
   return 0;
 }
 

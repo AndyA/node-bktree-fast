@@ -124,6 +124,17 @@ static napi_value _bk_create(napi_env env, napi_callback_info info) {
   return NULL;
 }
 
+static napi_value _bk_size(napi_env env, napi_callback_info info) {
+  napi_value argv[1];
+
+  if (fetch_args(env, info, argv, 1)) return NULL;;
+
+  bk_tree *tree = get_tree(env, argv[0]);
+  if (!tree) return NULL;
+
+  return make_unsigned(env, tree->size);
+}
+
 static napi_value _bk_add(napi_env env, napi_callback_info info) {
   napi_value argv[2];
   if (fetch_args(env, info, argv, 2)) return NULL;
@@ -196,6 +207,7 @@ static napi_value _bk_query(napi_env env, napi_callback_info info) {
 napi_value Init(napi_env env, napi_value exports) {
   if (export_function(env, exports, "distance", _bk_distance) ||
       export_function(env, exports, "create", _bk_create) ||
+      export_function(env, exports, "size", _bk_size) ||
       export_function(env, exports, "add", _bk_add) ||
       export_function(env, exports, "walk", _bk_walk) ||
       export_function(env, exports, "query", _bk_query))

@@ -19,6 +19,7 @@ typedef struct bk_node {
 
 typedef struct bk_tree {
   size_t key_bits;
+  ssize_t size;
   bk_node *root;
   bk_node **pool;
 } bk_tree;

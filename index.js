@@ -11,6 +11,10 @@ class BKTree {
     this.tree = bkt.create(keyBits);
   }
 
+  get size() {
+    return bkt.size(this.tree);
+  }
+
   padKey(key) {
     return key.padStart(this.keyBits / 4, "0");
   }
