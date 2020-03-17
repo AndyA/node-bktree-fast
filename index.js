@@ -33,6 +33,12 @@ class BKTree {
     bkt.query(this.tree, this.padKey(key), maxDist, cb);
     return this;
   }
+
+  has(key) {
+    let found = false;
+    this.query(key, 0, () => (found = true));
+    return found;
+  }
 }
 
 module.exports = BKTree;

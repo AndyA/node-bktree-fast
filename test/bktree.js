@@ -50,6 +50,17 @@ class HashMaker {
     return bits;
   }
 
+  get keySet() {
+    return (this._set = this._set || new Set(this.data));
+  }
+
+  randomKey() {
+    while (true) {
+      const key = this.binToHex(this.makeRandom().join(""));
+      if (!this.keySet.has(key)) return key;
+    }
+  }
+
   get data() {
     return (this._data =
       this._data ||
@@ -113,6 +124,15 @@ describe("BKTree", () => {
         for (const a of hm.data)
           for (const b of hm.data)
             expect(tree.distance(a, b)).to.equal(hm.distance(a, b));
+      });
+
+      it("should know which keys it has", () => {
+        const tree = new BKTree(keyLen).add(hm.data);
+        expect(hm.data.map(key => tree.has(key))).to.deep.equal(
+          hm.data.map(() => true)
+        );
+        // Not interested in the key
+        for (const key of hm.data) expect(tree.has(hm.randomKey())).to.be.false;
       });
 
       it("should walk the tree", () => {
