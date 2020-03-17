@@ -148,6 +148,7 @@ static void _bk_walk_callback(const bk_key *key, unsigned dist, void *ctx) {
   argv[0] = make_key_string(cb->env, cb->tree, key);
   argv[1] = make_unsigned(cb->env, dist);
   napi_status status = napi_call_function(cb->env, cb->callback, cb->callback, 2, argv, &res);
+
   if (status != napi_ok)
     napi_throw_error(cb->env, NULL, "Failed to invoke callback");
 }
