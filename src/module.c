@@ -9,27 +9,38 @@ typedef struct cb_context {
   const bk_tree *tree;
 } cb_context;
 
-static void export_function(napi_env env, napi_value exports, const char *name,
-                            napi_value(*func)(napi_env env, napi_callback_info info)) {
-  napi_status status;
+static int export_function(napi_env env, napi_value exports, const char *name,
+                           napi_value(*func)(napi_env env, napi_callback_info info)) {
   napi_value fn;
 
-  status = napi_create_function(env, NULL, 0, func, NULL, &fn);
-  if (status != napi_ok)
-    napi_throw_error(env, NULL, "Unable to wrap native function");
+  if (napi_ok != napi_create_function(env, NULL, 0, func, NULL, &fn) ||
+      napi_ok != napi_set_named_property(env, exports, name, fn)) {
+    napi_throw_error(env, NULL, "Unable to export function");
+    return 1;
+  }
 
-  status = napi_set_named_property(env, exports, name, fn);
-  if (status != napi_ok)
-    napi_throw_error(env, NULL, "Unable to populate exports");
+  return 0;
+}
+
+static int fetch_args(napi_env env, napi_callback_info info,
+                      napi_value *argv, size_t argc) {
+  size_t argc_got = argc;
+  napi_status status = napi_get_cb_info(env, info, &argc_got, argv, NULL, NULL);
+
+  if (status != napi_ok || argc_got != argc) {
+    napi_throw_error(env, NULL, "Failed to parse arguments");
+    return 1;
+  }
+
+  return 0;
 }
 
 static bk_key *get_key(napi_env env, const bk_tree *tree, napi_value arg, bk_key *key) {
   char buf[bk_hex_len(tree) + 1];
   size_t len;
 
-  napi_status status = napi_get_value_string_latin1(env, arg, buf, bk_hex_len(tree) + 1, &len);
-
-  if (status == napi_ok && len == bk_hex_len(tree) && !bk_hex2key(tree, buf, key))
+  if (napi_ok == napi_get_value_string_latin1(env, arg, buf, bk_hex_len(tree) + 1, &len) &&
+      len == bk_hex_len(tree) && !bk_hex2key(tree, buf, key))
     return key;
 
   napi_throw_error(env, NULL, "Can't parse hash");
@@ -37,46 +48,41 @@ static bk_key *get_key(napi_env env, const bk_tree *tree, napi_value arg, bk_key
 }
 
 static bk_tree *get_tree(napi_env env, napi_value arg) {
-  void *tree;
-  napi_status status = napi_get_value_external(env, arg, &tree);
-  if (status != napi_ok)
+  void *tree = NULL;
+
+  if (napi_ok != napi_get_value_external(env, arg, &tree))
     napi_throw_error(env, NULL, "Can't get tree from arg");
+
   return (bk_tree *) tree;
 }
 
 static int32_t get_int32(napi_env env, napi_value arg) {
-  int32_t res;
-  napi_status status = napi_get_value_int32(env, arg, &res);
-  if (status != napi_ok)
+  int32_t res = 0;
+
+  if (napi_ok != napi_get_value_int32(env, arg, &res))
     napi_throw_error(env, NULL, "Can't get int from arg");
+
   return res;
 }
 
 static napi_value make_key_string(napi_env env, const bk_tree *tree, const bk_key *key) {
   char buf[bk_hex_len(tree) + 1];
-  napi_value str;
+  napi_value str = NULL;
+
   bk_key2hex(tree, key, buf);
-  napi_status status = napi_create_string_latin1(env, buf, bk_hex_len(tree), &str);
-  if (status != napi_ok)
+  if (napi_ok != napi_create_string_latin1(env, buf, bk_hex_len(tree), &str))
     napi_throw_error(env, NULL, "Failed to create key string");
+
   return str;
 }
 
 static napi_value make_unsigned(napi_env env, unsigned v) {
-  napi_value res;
-  napi_status status = napi_create_int32(env, v, &res);
-  if (status != napi_ok)
+  napi_value res = NULL;
+
+  if (napi_ok != napi_create_int32(env, v, &res))
     napi_throw_error(env, NULL, "Failed to create int");
 
   return res;
-}
-
-static void fetch_args(napi_env env, napi_callback_info info,
-                       napi_value *argv, size_t argc) {
-  size_t argc_got = argc;
-  napi_status status = napi_get_cb_info(env, info, &argc_got, argv, NULL, NULL);
-  if (status != napi_ok || argc_got != argc)
-    napi_throw_error(env, NULL, "Failed to parse arguments");
 }
 
 static napi_value _bk_distance(napi_env env, napi_callback_info info) {
@@ -140,8 +146,8 @@ static void _bk_walk_callback(const bk_key *key, unsigned dist, void *ctx) {
 static napi_value _bk_walk(napi_env env, napi_callback_info info) {
   napi_value argv[2];
   cb_context cb;
-  fetch_args(env, info, argv, 2);
 
+  fetch_args(env, info, argv, 2);
   bk_tree *tree = get_tree(env, argv[0]);
   cb.env = env;
   cb.callback = argv[1];
@@ -153,8 +159,8 @@ static napi_value _bk_walk(napi_env env, napi_callback_info info) {
 static napi_value _bk_query(napi_env env, napi_callback_info info) {
   napi_value argv[4];
   cb_context cb;
-  fetch_args(env, info, argv, 4);
 
+  fetch_args(env, info, argv, 4);
   bk_tree *tree = get_tree(env, argv[0]);
   bk_key key[bk_u64_len(tree)];
   get_key(env, tree, argv[1], key);
@@ -167,13 +173,12 @@ static napi_value _bk_query(napi_env env, napi_callback_info info) {
 }
 
 napi_value Init(napi_env env, napi_value exports) {
-  export_function(env, exports, "distance", _bk_distance);
-
-  export_function(env, exports, "create", _bk_create);
-
-  export_function(env, exports, "add", _bk_add);
-  export_function(env, exports, "walk", _bk_walk);
-  export_function(env, exports, "query", _bk_query);
+  if (export_function(env, exports, "distance", _bk_distance) ||
+      export_function(env, exports, "create", _bk_create) ||
+      export_function(env, exports, "add", _bk_add) ||
+      export_function(env, exports, "walk", _bk_walk) ||
+      export_function(env, exports, "query", _bk_query))
+    return NULL;
   return exports;
 }
 
