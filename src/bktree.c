@@ -153,8 +153,10 @@ static void query(const bk_tree *tree, const bk_node *node,
                   void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
   unsigned dist = bk_distance(tree, NODE_KEY(tree, node), key);
 
-  if (dist <= max_dist)
+  if (dist <= max_dist) {
     callback(NODE_KEY(tree, node), dist, ctx);
+    if (max_dist == 0) return;
+  }
 
   int min = MAX(0, (int) dist - (int) max_dist - 1);
   int max = MIN(dist + max_dist + 1, node->size);
