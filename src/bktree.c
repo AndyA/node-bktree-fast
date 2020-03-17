@@ -141,7 +141,8 @@ static void walk(const bk_tree *tree, const bk_node *node, void *ctx, unsigned d
 
 void bk_walk(const bk_tree *tree, void *ctx,
              void (*callback)(const bk_key *key, unsigned depth, void *ctx)) {
-  walk(tree, tree->root, ctx, 0, callback);
+  if (tree->root)
+    walk(tree, tree->root, ctx, 0, callback);
 }
 
 static void query(const bk_tree *tree, const bk_node *node,
@@ -164,7 +165,8 @@ static void query(const bk_tree *tree, const bk_node *node,
 
 void bk_query(const bk_tree *tree, const bk_key *key, unsigned max_dist, void *ctx,
               void (*callback)(const bk_key *key, unsigned distance, void *ctx)) {
-  query(tree, tree->root, key, max_dist, ctx, callback);
+  if (tree->root)
+    query(tree, tree->root, key, max_dist, ctx, callback);
 }
 
 const char *bk_key2hex(const bk_tree *tree, const bk_key *key, char *buf) {
