@@ -89,6 +89,20 @@ Query the tree to find all hashes that are within the specified Hamming
 distance of the supplied hash. Searches slow down significantly when
 maxDist is large.
 
+### find(hash, maxDist)
+
+```js
+const found = tree.find(hash, 10);
+// Returns an array of { hash: "...", distance: ... }
+for (const { hash, distance } of found) 
+  console.log(`${hash} ${distance}`);
+```
+
+Find all hashes within the specified Hamming distance of the supplied hash.
+Returns an array of objects each of which contains a hash and its distance
+from the hash we're searching for. The array is ordered by ascending 
+distance.
+
 ### has(hash)
 
 ```js

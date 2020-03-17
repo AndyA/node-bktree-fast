@@ -38,6 +38,14 @@ class BKTree {
     return this;
   }
 
+  find(key, maxDist) {
+    const found = [];
+    this.query(key, maxDist, (hash, distance) =>
+      found.push({ hash, distance })
+    );
+    return found.sort((a, b) => a.distance - b.distance);
+  }
+
   has(key) {
     let found = false;
     this.query(key, 0, () => (found = true));

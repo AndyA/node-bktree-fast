@@ -56,8 +56,8 @@ class HashMaker {
 
   randomKey() {
     while (true) {
-      const key = this.binToHex(this.makeRandom().join(""));
-      if (!this.keySet.has(key)) return key;
+      const hash = this.binToHex(this.makeRandom().join(""));
+      if (!this.keySet.has(hash)) return hash;
     }
   }
 
@@ -91,9 +91,9 @@ class HashMaker {
 
     if (a === b) return 0;
     if (a > b) return this.distance(b, a);
-    const key = a + "-" + b;
-    return (this._dist[key] =
-      this._dist[key] ||
+    const hash = a + "-" + b;
+    return (this._dist[hash] =
+      this._dist[hash] ||
       (() => {
         let dist = 0;
         for (let i = 0; i < a.length; i += 8) {
@@ -107,9 +107,9 @@ class HashMaker {
 
   query(baseKey, maxDist) {
     const out = [];
-    for (const key of this.data) {
-      const distance = this.distance(key, baseKey);
-      if (distance <= maxDist) out.push({ key, distance });
+    for (const hash of this.data) {
+      const distance = this.distance(hash, baseKey);
+      if (distance <= maxDist) out.push({ hash, distance });
     }
     return out.sort((a, b) => a.distance - b.distance);
   }
@@ -128,11 +128,12 @@ describe("BKTree", () => {
 
       it("should know which keys it has", () => {
         const tree = new BKTree(keyLen).add(hm.data);
-        expect(hm.data.map(key => tree.has(key))).to.deep.equal(
+        expect(hm.data.map(hash => tree.has(hash))).to.deep.equal(
           hm.data.map(() => true)
         );
-        // Not interested in the key
-        for (const key of hm.data) expect(tree.has(hm.randomKey())).to.be.false;
+        // Not interested in the hash
+        for (const hash of hm.data)
+          expect(tree.has(hm.randomKey())).to.be.false;
       });
 
       it("should know the tree size", () => {
@@ -147,7 +148,7 @@ describe("BKTree", () => {
       it("should walk the tree", () => {
         const tree = new BKTree(keyLen).add(hm.data);
         const got = [];
-        tree.walk((key, depth) => got.push(key));
+        tree.walk((hash, depth) => got.push(hash));
         expect(got.sort()).to.deep.equal(hm.data.slice(0).sort());
       });
 
@@ -157,12 +158,14 @@ describe("BKTree", () => {
           for (const baseKey of [hm.random, hm.data[0]]) {
             const baseKey = hm.random;
             const got = [];
-            tree.query(baseKey, dist, (key, distance) =>
-              got.push({ key, distance })
+            tree.query(baseKey, dist, (hash, distance) =>
+              got.push({ hash, distance })
             );
+            const want = hm.query(baseKey, dist);
             expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal(
-              hm.query(baseKey, dist)
+              want
             );
+            expect(tree.find(baseKey, dist)).to.deep.equal(want);
           }
         }
       });
@@ -175,11 +178,11 @@ describe("BKTree", () => {
       expect(tree.padKey("1")).to.equal("0000000000000001");
       tree.add(["1", "2", "3"]);
       const got = [];
-      tree.query("2", 3, (key, distance) => got.push({ key, distance }));
+      tree.query("2", 3, (hash, distance) => got.push({ hash, distance }));
       expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal([
-        { key: "0000000000000002", distance: 0 },
-        { key: "0000000000000003", distance: 1 },
-        { key: "0000000000000001", distance: 2 }
+        { hash: "0000000000000002", distance: 0 },
+        { hash: "0000000000000003", distance: 1 },
+        { hash: "0000000000000001", distance: 2 }
       ]);
     });
   });
