@@ -113,15 +113,6 @@ static napi_value _bk_create(napi_env env, napi_callback_info info) {
   return NULL;
 }
 
-static napi_value _bk_destroy(napi_env env, napi_callback_info info) {
-  napi_value argv[1];
-  fetch_args(env, info, argv, 1);
-
-  bk_tree *tree = get_tree(env, argv[0]);
-  bk_free(tree);
-  return NULL;
-}
-
 static napi_value _bk_add(napi_env env, napi_callback_info info) {
   napi_value argv[2];
   fetch_args(env, info, argv, 2);
@@ -177,8 +168,9 @@ static napi_value _bk_query(napi_env env, napi_callback_info info) {
 
 napi_value Init(napi_env env, napi_value exports) {
   export_function(env, exports, "distance", _bk_distance);
+
   export_function(env, exports, "create", _bk_create);
-  export_function(env, exports, "destroy", _bk_destroy);
+
   export_function(env, exports, "add", _bk_add);
   export_function(env, exports, "walk", _bk_walk);
   export_function(env, exports, "query", _bk_query);
