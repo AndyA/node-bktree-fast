@@ -12,7 +12,7 @@ extern "C" {
 typedef uint64_t bk_key;
 
 typedef struct bk_node {
-  unsigned size; /* number of slots in this node */
+  uint64_t size; /* number of slots in this node. uint64_t to keep everything aligned */
   /* |key| follows */
   /* |size| child pointers follow */
 } bk_node;
