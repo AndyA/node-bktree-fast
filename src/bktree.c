@@ -65,7 +65,7 @@ static void release_deep(bk_tree *tree, bk_node *node) {
 }
 
 static void free_pool(bk_tree *tree) {
-  for (unsigned i = 0; i < bk_key_len(tree); i++) {
+  for (unsigned i = 0; i <= bk_key_len(tree); i++) {
     free_node(tree, tree->pool[i]);
     tree->pool[i] = NULL;
   }

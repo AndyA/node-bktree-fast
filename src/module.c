@@ -110,7 +110,16 @@ static napi_value _bk_create(napi_env env, napi_callback_info info) {
   }
 
   napi_throw_error(env, NULL, "Can't create tree");
-  return res;
+  return NULL;
+}
+
+static napi_value _bk_destroy(napi_env env, napi_callback_info info) {
+  napi_value argv[1];
+  fetch_args(env, info, argv, 1);
+
+  bk_tree *tree = get_tree(env, argv[0]);
+  bk_free(tree);
+  return NULL;
 }
 
 static napi_value _bk_add(napi_env env, napi_callback_info info) {
@@ -123,7 +132,7 @@ static napi_value _bk_add(napi_env env, napi_callback_info info) {
 
   if (bk_add(tree, key))
     napi_throw_error(env, NULL, "Can't add node");
-  return argv[0];
+  return NULL;
 }
 
 static void _bk_walk_callback(const bk_key *key, unsigned dist, void *ctx) {
@@ -147,7 +156,7 @@ static napi_value _bk_walk(napi_env env, napi_callback_info info) {
   cb.callback = argv[1];
   cb.tree = tree;
   bk_walk(tree, &cb, _bk_walk_callback);
-  return argv[0];
+  return NULL;
 }
 
 static napi_value _bk_query(napi_env env, napi_callback_info info) {
@@ -163,12 +172,13 @@ static napi_value _bk_query(napi_env env, napi_callback_info info) {
   cb.callback = argv[3];
   cb.tree = tree;
   bk_query(tree, key, max_dist, &cb, _bk_walk_callback);
-  return argv[0];
+  return NULL;
 }
 
 napi_value Init(napi_env env, napi_value exports) {
   export_function(env, exports, "distance", _bk_distance);
   export_function(env, exports, "create", _bk_create);
+  export_function(env, exports, "destroy", _bk_destroy);
   export_function(env, exports, "add", _bk_add);
   export_function(env, exports, "walk", _bk_walk);
   export_function(env, exports, "query", _bk_query);
