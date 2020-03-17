@@ -94,8 +94,11 @@ bk_tree *bk_new(size_t key_bits) {
 unsigned bk_distance(const bk_tree *tree, const bk_key *a, const bk_key *b) {
   unsigned dist = 0;
   unsigned len = bk_u64_len(tree);
-  for (unsigned i = 0; i < len; i++)
-    dist += __builtin_popcountll(a[i] ^ b[i]);
+  for (unsigned i = 0; i < len; i++) {
+    uint64_t av = a[i];
+    uint64_t bv = b[i];
+    if (av != bv) dist += __builtin_popcountll(a[i] ^ b[i]);
+  }
   return dist;
 }
 
