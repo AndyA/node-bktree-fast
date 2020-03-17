@@ -47,9 +47,7 @@ class BKTree {
   }
 
   has(key) {
-    let found = false;
-    this.query(key, 0, () => (found = true));
-    return found;
+    return this.find(key, 0).length > 0;
   }
 }
 
