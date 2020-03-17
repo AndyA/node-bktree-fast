@@ -7,7 +7,12 @@ class BKTree {
   constructor(keyBits) {
     if (keyBits % 64)
       throw new Error(`Key size must be a multiple of 64, got ${keyBits}`);
+    this.keyBits = keyBits;
     this.tree = bkt.create(keyBits);
+  }
+
+  padKey(key) {
+    return key.padStart(this.keyBits / 4, "0");
   }
 
   distance(a, b) {
@@ -15,7 +20,7 @@ class BKTree {
   }
 
   add(...keys) {
-    for (const key of _.flatten(keys)) bkt.add(this.tree, key);
+    for (const key of _.flatten(keys)) bkt.add(this.tree, this.padKey(key));
     return this;
   }
 
@@ -24,7 +29,7 @@ class BKTree {
   }
 
   query(key, maxDist, cb) {
-    bkt.query(this.tree, key, maxDist, cb);
+    bkt.query(this.tree, this.padKey(key), maxDist, cb);
   }
 }
 

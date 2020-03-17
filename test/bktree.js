@@ -139,4 +139,19 @@ describe("BKTree", () => {
       });
     });
   }
+
+  describe("Misc functions", () => {
+    it("should pad keys", () => {
+      const tree = new BKTree(64);
+      expect(tree.padKey("1")).to.equal("0000000000000001");
+      tree.add(["1", "2", "3"]);
+      const got = [];
+      tree.query("2", 3, (key, distance) => got.push({ key, distance }));
+      expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal([
+        { key: "0000000000000002", distance: 0 },
+        { key: "0000000000000003", distance: 1 },
+        { key: "0000000000000001", distance: 2 }
+      ]);
+    });
+  });
 });
