@@ -18,8 +18,7 @@ from a target hash by no more than a specified number of bits.
 
 This is a fast implementation of a BK tree written in C (with N-API). It
 allows the efficient indexing and querying of hashes of any size. The
-application it was written for searches for near matches in a trove of
-around 1,500,000 images.
+application it was written for has a trove of around 1,500,000 images.
 
 A general purpose BK tree allows any distance metric to be used, e.g.
 Levenshtein edit distance. This module only supports the Hamming
@@ -27,7 +26,9 @@ distance between hashes - i.e. the number of bits that differ.
 
 ## Installing
 
-  $ npm install bktree-fast
+```sh
+$ npm install bktree-fast
+```
 
 ## Usage
 
@@ -64,7 +65,7 @@ const tree = new BKTree(64);
 The constructor takes a single argument: the number of bits in each
 hash. An error is thrown if this is not a multiple of 64.
   
-### add(...hashs)
+### add(...hashes)
 
 ```js
 tree.add(hash);                           // A single hash
