@@ -21,8 +21,13 @@ allows the efficient indexing and querying of hashes of any size. The
 application it was written for has a trove of around 1,500,000 images.
 
 A general purpose BK tree allows any distance metric to be used, e.g.
-Levenshtein edit distance. This module only supports the Hamming
-distance between hashes - i.e. the number of bits that differ.
+[Levenshtein edit distance](https://en.wikipedia.org/wiki/Levenshtein_distance).
+This module only supports the 
+[Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance) 
+between hashes - i.e. the number of bits that differ.
+
+A BKTree behaves like a set: no values are stored against the hashes 
+and adding a hash more than once has no effect.
 
 ## Installing
 
@@ -74,8 +79,7 @@ tree.add([hash1, hash2], [hash3, hash4]); // Arrays of hashs
 ```
 
 Add hashes to the tree. Handles multiple arguments and any arrays are
-flattened. A tree has set semantics: no values are stored against the
-hashes and adding a hash more than once has no effect.
+flattened.
 
 ### query(hash, maxDist, callbackl)
 
