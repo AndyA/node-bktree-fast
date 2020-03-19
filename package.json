@@ -9,7 +9,7 @@
     "hash",
     "perceptual"
   ],
-  "main": "module.js",
+  "main": "index.js",
   "scripts": {
     "start": "node-gyp configure build",
     "test": "mocha --recursive test"
