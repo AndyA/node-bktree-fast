@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "module",
-      "sources": [ "./src/module.c", "./src/bktree.c" ]
+      "target_name": "bkapi",
+      "sources": [ "./src/bkapi.c", "./src/bktree.c" ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 "use strict";
 
-const bkt = require("./build/Release/module");
+const bkt = require("./build/Release/bkapi");
 const _ = require("lodash");
 
 class BKTree {
