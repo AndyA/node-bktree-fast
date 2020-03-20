@@ -44,9 +44,10 @@ static bk_node *get_node(bk_tree *tree, unsigned size) {
 }
 
 static void free_node(bk_tree *tree, bk_node *node) {
-  if (node) {
-    free_node(tree, *NODE_NEXT(tree, node));
+  while (node) {
+    bk_node *next = *NODE_NEXT(tree, node);
     free(node);
+    node = next;
   }
 }
 
