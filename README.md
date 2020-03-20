@@ -16,15 +16,13 @@ from a target hash by no more than a specified number of bits.
 
 ## What's this module?
 
-This is a fast implementation of a BK tree written in C (with N-API). It
-allows the efficient indexing and querying of hashes of any size. The
-application it was written for has a trove of around 1,500,000 images.
+This is a native C implementation of a BK tree. 
 
-A general purpose BK tree allows any distance metric to be used, e.g.
-[Levenshtein edit distance](https://en.wikipedia.org/wiki/Levenshtein_distance).
-This module only supports the 
+In the interests of efficiency the only distance metric it supports is the
 [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance) 
-between hashes - i.e. the number of bits that differ.
+between binary hashes, i.e. the number of bits that differ between them.
+That's not a restriction of BK trees in general; they work with any
+distance metric.
 
 A BKTree behaves like a set: no values are stored against the hashes 
 and adding a hash more than once has no effect.
