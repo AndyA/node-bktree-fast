@@ -105,9 +105,9 @@ class HashMaker {
 
   query(baseKey, maxDist) {
     const out = [];
-    for (const hash of this.data) {
-      const distance = this.distance(hash, baseKey);
-      if (distance <= maxDist) out.push({ hash, distance });
+    for (const key of this.data) {
+      const distance = this.distance(key, baseKey);
+      if (distance <= maxDist) out.push({ key, distance });
     }
     return out.sort((a, b) => a.distance - b.distance);
   }
@@ -135,7 +135,7 @@ function testTree(treeClass) {
       });
 
       it("should know the tree size", () => {
-        const tree = new treeClass(keyLen, {foo:1});
+        const tree = new treeClass(keyLen, { foo: 1 });
         expect(tree.size).to.equal(0);
         tree.add(hm.data);
         expect(tree.size).to.equal(hm.data.length);
@@ -156,8 +156,8 @@ function testTree(treeClass) {
           for (const baseKey of [hm.random, hm.data[0]]) {
             const baseKey = hm.random;
             const got = [];
-            tree.query(baseKey, dist, (hash, distance) =>
-              got.push({ hash, distance })
+            tree.query(baseKey, dist, (key, distance) =>
+              got.push({ key, distance })
             );
             const want = hm.query(baseKey, dist);
             expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal(

@@ -25,14 +25,14 @@ class BKTree {
         this._size++;
         return { key, children: [] };
       }
-      const dist = this.distance(node.key, key);
-      if (dist === 0) return node; // Already got it
-      node.children[dist - 1] = _add(node.children[dist - 1], key);
+      const dist = this.distance(node.key, key) - 1;
+      if (dist < 0) return node; // Already got it
+      node.children[dist] = _add(node.children[dist], key);
       return node;
     };
 
     this.tree = _.flatten(keys).reduce(
-      (node, key) => _add(node, this.padKey(key)),
+      (node, key) => _add(node, key),
       this.tree
     );
 
@@ -47,7 +47,7 @@ class BKTree {
         if (maxDist === 0) return;
       }
       const min = Math.max(1, dist - maxDist);
-      const max = Math.min(dist + maxDist, this.keyBits);
+      const max = dist + maxDist;
       node.children
         .slice(min - 1, max)
         .filter(Boolean)
@@ -68,9 +68,7 @@ class BKTree {
 
   find(key, maxDist) {
     const found = [];
-    this.query(key, maxDist, (hash, distance) =>
-      found.push({ hash, distance })
-    );
+    this.query(key, maxDist, (key, distance) => found.push({ key, distance }));
     return found.sort((a, b) => a.distance - b.distance);
   }
 

@@ -54,8 +54,8 @@ const b =
 tree.add(a, b);
 
 // Search for all entries within 10 bits of |a|
-tree.query(a, 10, (hash, distance) => {
-  console.log(`${hash} ${distance}`);
+tree.query(a, 10, (key, distance) => {
+  console.log(`${key} ${distance}`);
 });
 ```
 
@@ -95,9 +95,9 @@ maxDist is large.
 
 ```js
 const found = tree.find(hash, 10);
-// Returns an array of { hash: "...", distance: ... }
-for (const { hash, distance } of found) 
-  console.log(`${hash} ${distance}`);
+// Returns an array of { key: "...", distance: ... }
+for (const { key, distance } of found) 
+  console.log(`${key} ${distance}`);
 ```
 
 Find all hashes within the specified Hamming distance of the supplied hash.
