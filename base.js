@@ -15,7 +15,7 @@ class BKTree {
 
   distance(a, b) {
     const { distance } = this.opt;
-    if (distance) return distance(a, b);
+    if (distance) return Math.round(distance(a, b));
     throw new Error("No distance function");
   }
 
