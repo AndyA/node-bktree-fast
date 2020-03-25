@@ -4,8 +4,6 @@ const chai = require("chai");
 const expect = chai.expect;
 const _ = require("lodash");
 
-const BKTree = require("..");
-
 function rebase(str, inBase, outBase) {
   const mapBase = b => (b === 2 ? 32 : b === 16 ? 8 : null);
   const stride = mapBase(inBase);
@@ -115,19 +113,19 @@ class HashMaker {
   }
 }
 
-describe("BKTree", () => {
+function testTree(treeClass) {
   for (let keyLen = 64; keyLen <= 512; keyLen += 64) {
     const hm = new HashMaker(keyLen);
     describe(`Key length: ${keyLen}`, () => {
       it("should compute distance", () => {
-        const tree = new BKTree(keyLen);
+        const tree = new treeClass(keyLen);
         for (const a of hm.data)
           for (const b of hm.data)
             expect(tree.distance(a, b)).to.equal(hm.distance(a, b));
       });
 
       it("should know which keys it has", () => {
-        const tree = new BKTree(keyLen).add(hm.data);
+        const tree = new treeClass(keyLen).add(hm.data);
         expect(hm.data.map(hash => tree.has(hash))).to.deep.equal(
           hm.data.map(() => true)
         );
@@ -137,7 +135,7 @@ describe("BKTree", () => {
       });
 
       it("should know the tree size", () => {
-        const tree = new BKTree(keyLen);
+        const tree = new treeClass(keyLen, {foo:1});
         expect(tree.size).to.equal(0);
         tree.add(hm.data);
         expect(tree.size).to.equal(hm.data.length);
@@ -146,14 +144,14 @@ describe("BKTree", () => {
       });
 
       it("should walk the tree", () => {
-        const tree = new BKTree(keyLen).add(hm.data);
+        const tree = new treeClass(keyLen).add(hm.data);
         const got = [];
         tree.walk((hash, depth) => got.push(hash));
         expect(got.sort()).to.deep.equal(hm.data.slice(0).sort());
       });
 
       it("should query", () => {
-        const tree = new BKTree(keyLen).add(hm.data);
+        const tree = new treeClass(keyLen).add(hm.data);
         for (let dist = 0; dist <= hm.length; dist++) {
           for (const baseKey of [hm.random, hm.data[0]]) {
             const baseKey = hm.random;
@@ -174,16 +172,28 @@ describe("BKTree", () => {
 
   describe("Misc functions", () => {
     it("should pad keys", () => {
-      const tree = new BKTree(64);
+      const tree = new treeClass(64);
       expect(tree.padKey("1")).to.equal("0000000000000001");
       tree.add(["1", "2", "3"]);
+
       const got = [];
       tree.query("2", 3, (hash, distance) => got.push({ hash, distance }));
-      expect(got.sort((a, b) => a.distance - b.distance)).to.deep.equal([
+      const res = got.sort((a, b) => a.distance - b.distance);
+      const want = [
         { hash: "0000000000000002", distance: 0 },
         { hash: "0000000000000003", distance: 1 },
         { hash: "0000000000000001", distance: 2 }
-      ]);
+      ];
+
+      expect(res).to.deep.equal(want);
     });
   });
+}
+
+describe("BKTree (C)", () => {
+  testTree(require("../native"));
+});
+
+describe("BKTree (Javascript)", () => {
+  testTree(require("../javascript"));
 });
