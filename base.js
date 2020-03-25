@@ -31,10 +31,7 @@ class BKTree {
       return node;
     };
 
-    this.tree = _.flatten(keys).reduce(
-      (node, key) => _add(node, key),
-      this.tree
-    );
+    this.tree = _.flatten(keys).reduce(_add, this.tree);
 
     return this;
   }
