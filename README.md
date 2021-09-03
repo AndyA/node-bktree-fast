@@ -141,6 +141,10 @@ const dist = tree.distance(hashA, hashB);
 Compute the Hamming distance between two hashes. The return value will be
 between 0 and the number of hash bits for this tree.
 
+## CI Status
+
+[![Node CI](https://github.com/AndyA/node-bktree-fast/actions/workflows/node.js.yml/badge.svg)](https://github.com/AndyA/node-bktree-fast/actions/workflows/node.js.yml)
+
 ## License
 
 Copyright © 2020, [Andy Armstrong](https://github.com/AndyA).
