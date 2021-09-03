@@ -26,8 +26,7 @@ class BKTree {
         return { key, children: [] };
       }
       const dist = this.distance(node.key, key) - 1;
-      if (dist < 0) return node; // Already got it
-      node.children[dist] = _add(node.children[dist], key);
+      if (dist >= 0) node.children[dist] = _add(node.children[dist], key);
       return node;
     };
 
