@@ -29,7 +29,7 @@
   "homepage": "https://github.com/AndyA/node-bktree-fast#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^7.1.0",
+    "mocha": "^10.2.0",
     "node-gyp": "^6.1.0"
   },
   "dependencies": {
